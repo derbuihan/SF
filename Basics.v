@@ -173,8 +173,12 @@ Proof.
   reflexivity.
 Qed.
 
-
-Definition oddb (n:nat) : bool := negb (evenb n).
+Fixpoint oddb (n: nat) : bool :=
+  match n with
+  | O => false
+  | S O => true
+  | S (S n') => oddb n'
+  end.
 
 Example test_oddb1: (oddb (S O)) = true.
 Proof.
