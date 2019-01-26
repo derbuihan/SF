@@ -1,4 +1,4 @@
-Require Import Basics.
+Require Export Basics.
 
 Module NatList.
 
