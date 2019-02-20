@@ -1,7 +1,7 @@
 Require Export Basics.
 
 Module NatList.
-
+  
   Inductive natprod : Type :=
     pair : nat -> nat -> natprod.
 

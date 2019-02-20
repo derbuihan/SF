@@ -1,4 +1,3 @@
-
 Inductive day: Type :=
   | monday: day
   | tuesday: day
@@ -63,7 +62,6 @@ Proof.
   simpl.
   reflexivity.
 Qed.
-
 
 Example test_orb3: (orb false true) = true.
 Proof.
@@ -715,16 +713,3 @@ Eval simpl in nat_bin 4.
 Eval simpl in nat_bin 5.
 Eval simpl in nat_bin 6.
 Eval simpl in nat_bin 10.
-
-
-  
-
-
-
-
-
-
-
-
-
-  

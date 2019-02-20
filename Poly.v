@@ -649,3 +649,262 @@ Proof.
 Qed.
 
 
+Theorem override_shadow : forall {X:Type} x1 x2 k1 k2 (f : nat -> X),
+  (override (override f k1 x2) k1 x1) k2 = (override f k1 x1) k2.
+Proof.
+  intros. unfold override.
+  destruct (beq_nat k1 k2).
+    trivial.
+    trivial.
+Qed.
+
+Theorem split_fst_snd : forall (X Y:Type) (l:list(X*Y)),
+    split l = ((fst (split l)) , (snd (split l))).
+Proof.
+  intros. induction l as [| [x y] l'].
+    reflexivity.
+    simpl. reflexivity.
+Qed.
+
+Theorem combine_split : forall X Y (l : list (X * Y)) l1 l2,
+  split l = (l1, l2) -> combine l1 l2 = l.
+Proof.
+  intros X Y l. induction l as [| [x y] l'].
+    intros. simpl in H. inversion H. reflexivity.
+    intros. simpl in H. inversion H. simpl.
+      assert (H3: combine (fst (split l')) (snd (split l')) = l'). apply IHl'. 
+      apply split_fst_snd. rewrite H3. reflexivity.
+Qed.
+
+Theorem length_O : forall X (l : list X),
+    0 = length l -> l = [].
+Proof.
+  intros X l.
+  induction l.
+    reflexivity.
+    simpl. intros. inversion H.
+Qed.
+
+Theorem split_combine : forall X Y (l1:list X) (l2:list Y),
+    length l1 = length l2 -> split (combine l1 l2) = (l1, l2).
+Proof.
+  intros X Y l1.
+  induction l1 as [| x l1'].
+    intros. apply length_O in H. rewrite H. reflexivity.
+    destruct l2. simpl. intros. inversion H.
+    simpl. intros. inversion H. apply IHl1' in H1. rewrite H1. reflexivity.
+Qed.
+
+Definition sillyfun1 (n : nat) : bool :=
+  if beq_nat n 3 then true
+  else if beq_nat n 5 then true
+  else false.
+
+Theorem sillyfun1_odd_odd : forall (n : nat),
+     sillyfun1 n = true ->
+     oddb n = true.
+Proof.
+  intros n eq. unfold sillyfun1 in eq.
+  remember (beq_nat n 3) as e3.
+  destruct e3.
+    apply beq_nat_eq in Heqe3. rewrite Heqe3. reflexivity.
+    remember (beq_nat n 5) as e5.
+    destruct e5.
+    apply beq_nat_eq in Heqe5. rewrite Heqe5. reflexivity.
+    inversion eq.
+Qed.
+
+Theorem override_same : forall {X:Type} x1 k1 k2 (f : nat -> X),
+    f k1 = x1 -> (override f k1 x1) k2 = f k2.
+Proof.
+  intros. unfold override.
+  remember (beq_nat k1 k2) as e1.
+  destruct e1.
+    apply beq_nat_eq in Heqe1. rewrite <- Heqe1. symmetry. trivial.
+    trivial.
+Qed.
+
+Theorem filter_exercise :
+  forall (X:Type) (test : X -> bool) (x : X) (l lf : list X),
+    filter test l = x :: lf -> test x = true.
+Proof.
+  intros X test x l.
+  induction l as [| x' l'].
+    simpl. intros. inversion H.
+    simpl. remember (test x') as e1. intros.
+    destruct e1.
+      inversion H. rewrite <- H1. symmetry. trivial.
+      specialize (IHl' lf). apply IHl'. rewrite <- H. reflexivity.
+Qed.
+
+Example trans_eq_example : forall (a b c d e f : nat),
+     [a,b] = [c,d] ->
+     [c,d] = [e,f] ->
+     [a,b] = [e,f].
+Proof.
+  intros a b c d e f eq1 eq2.
+  rewrite -> eq1. rewrite -> eq2. reflexivity.
+Qed.
+
+Theorem trans_eq : forall {X:Type} (n m o : X),
+  n = m -> m = o -> n = o.
+Proof.
+  intros X n m o eq1 eq2. rewrite -> eq1. rewrite -> eq2.
+  reflexivity.
+Qed.
+
+Example trans_eq_example' : forall (a b c d e f : nat),
+     [a,b] = [c,d] ->
+     [c,d] = [e,f] ->
+     [a,b] = [e,f].
+Proof.
+  intros a b c d e f eq1 eq2.
+  apply trans_eq with (m:=[c,d]). apply eq1. apply eq2.
+Qed.
+
+Example trans_eq_exercise : forall (n m o p : nat),
+     m = (minustwo o) ->
+     (n + p) = m ->
+     (n + p) = (minustwo o).
+Proof.
+  intros n0 m0 o0 p0 eq1 eq2. apply trans_eq with (m := m0).
+  trivial. trivial.
+Qed.
+
+Theorem beq_nat_trans : forall n m p,
+  true = beq_nat n m ->
+  true = beq_nat m p ->
+  true = beq_nat n p.
+Proof.
+  intros. symmetry. apply beq_nat_eq in H. apply beq_nat_eq in H0. rewrite <- H0. rewrite H.
+  symmetry. apply beq_nat_refl.
+Qed.
+
+
+Theorem override_permute : forall {X:Type} x1 x2 k1 k2 k3 (f : nat -> X),
+  false = beq_nat k2 k1 ->
+  (override (override f k2 x2) k1 x1) k3 = (override (override f k1 x1) k2 x2) k3.
+Proof.
+  intros. unfold override.
+  remember (beq_nat k1 k3) as e1. remember (beq_nat k2 k3) as e2. rewrite beq_nat_sym in Heqe2.
+  destruct e1. destruct e2.
+    specialize (beq_nat_trans k1 k3 k2 Heqe1 Heqe2).
+    rewrite beq_nat_sym. rewrite <- H. intros. inversion H0.
+    trivial.
+  destruct e2.
+    trivial. trivial.
+Qed.
+
+Definition fold_length {X : Type} (l : list X) : nat :=
+  fold (fun _ n => S n) l 0.
+
+Example test_fold_length1 : fold_length [4,7,0] = 3.
+Proof. reflexivity. Qed.
+
+Theorem fold_length_correct : forall X (l : list X),
+  fold_length l = length l.
+Proof.
+  intros X l.
+  induction l as [| l'].
+    reflexivity.
+    simpl. rewrite <- IHl. unfold fold_length. simpl. reflexivity.
+Qed.
+
+Definition fold_map {X Y:Type} (f : X -> Y) (l : list X) : list Y :=
+  fold (fun x ys => (f x) :: ys) l [].
+
+Example test_fold_map1 : fold_map (fun n => n + 1) [2,3,5] = [3,4,6].
+Proof. reflexivity. Qed.
+
+Theorem fold_map_correct : forall X Y (xs : list X) (f : X -> Y),
+    fold_map f xs = map f xs.
+Proof.
+  intros. induction xs as [| x xs'].
+    reflexivity.
+    simpl. rewrite <- IHxs'. unfold fold_map. reflexivity.
+Qed.
+
+Module MumbleBaz.
+  
+  Inductive mumble : Type :=
+  | a : mumble
+  | b : mumble -> nat -> mumble
+  | c : mumble.
+  
+  Inductive grumble (X:Type) : Type :=
+  | d : mumble -> grumble X
+  | e : X -> grumble X.
+
+  Inductive baz : Type :=
+  | x : baz -> baz
+  | y : baz -> bool -> baz.
+
+End MumbleBaz.
+
+Fixpoint forallb {X : Type} (f : X -> bool) (l : list X) :=
+  match l with
+  | [] => true
+  | x :: xs => andb (f x) (forallb f xs)
+  end.
+
+Example test_forallb1 : forallb oddb [1,3,5,7,9] = true.
+Proof. reflexivity. Qed.
+
+Example test_forallb2 : forallb negb [false,false] = true.
+Proof. reflexivity. Qed.
+
+Example test_forallb3 : forallb evenb [0,2,4,5] = false.
+Proof. reflexivity. Qed.
+
+Example test_forallb4 : forallb (beq_nat 5) [] = true.
+Proof. reflexivity. Qed.
+
+Fixpoint existsb {X : Type} (f : X -> bool) (l : list X) :=
+  match l with
+  | [] => false
+  | x :: xs => orb (f x) (existsb f xs)
+  end.
+
+Example test_existsb1 : existsb (beq_nat 5) [0,2,3,6] = false.
+Proof. reflexivity. Qed.
+
+Example test_existsb2 : existsb (andb true) [true,true,false] = true.
+Proof. reflexivity. Qed.
+
+Example test_existsb3 : existsb oddb [1,0,0,0,0,3] = true.
+Proof. reflexivity. Qed.
+
+Example test_existsb4 : existsb evenb [] = false.
+Proof. reflexivity. Qed.
+
+Definition existsb' {X : Type} (f : X -> bool) (l : list X) :=  negb (forallb (fun x => negb (f x)) l).
+
+Example test_existsb'1 : existsb' (beq_nat 5) [0,2,3,6] = false.
+Proof. reflexivity. Qed.
+
+Example test_existsb'2 : existsb' (andb true) [true,true,false] = true.
+Proof. reflexivity. Qed.
+
+Example test_existsb'3 : existsb' oddb [1,0,0,0,0,3] = true.
+Proof. reflexivity. Qed.
+
+Example test_existsb'4 : existsb' evenb [] = false.
+Proof. reflexivity. Qed.
+
+Lemma negb_andb : forall b1 b2 : bool,
+    negb (andb b1 b2) = orb (negb b1) (negb b2).
+Proof.
+  intros.
+  destruct b1. destruct b2.
+  reflexivity. reflexivity. reflexivity.
+Qed.  
+  
+Theorem existsb_eq_existsb' : forall X (f : X -> bool) (l:list X),
+    existsb f l = existsb' f l.
+Proof.  
+  intros.
+  induction l as [| x' l'].
+    reflexivity.
+    unfold existsb'. simpl. rewrite negb_andb. rewrite negb_involutive. rewrite IHl'. unfold existsb'. reflexivity.
+Qed.
+
